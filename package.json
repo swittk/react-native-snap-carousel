@@ -1,11 +1,14 @@
 {
-    "name": "react-native-snap-carousel",
-    "version": "3.9.1",
+    "name": "@switt/react-native-snap-carousel",
+    "version": "3.9.1-alpha1",
     "description": "Swiper/carousel component for React Native with previews, multiple layouts, parallax images, performant handling of huge numbers of items, and RTL support. Compatible with Android & iOS.",
-    "main": "src/index.js",
+    "main": "lib/index",
     "repository": {
         "type": "git",
         "url": "github.com/meliorence/react-native-snap-carousel"
+    },
+    "scripts": {
+        "prepublish": "tsc"
     },
     "keywords": [
         "react",
@@ -45,15 +48,10 @@
         "react-native": "*"
     },
     "devDependencies": {
-        "babel-eslint": "^8.2.2",
-        "eslint": "^4.19.1",
-        "eslint-config-standard": "^10.2.1",
-        "eslint-config-standard-react": "^5.0.0",
-        "eslint-plugin-import": "^2.11.0",
-        "eslint-plugin-node": "^5.2.1",
-        "eslint-plugin-promise": "^3.7.0",
-        "eslint-plugin-react": "^7.7.0",
-        "eslint-plugin-standard": "^3.0.1"
+        "@types/react": "18.0.0",
+        "@types/react-native": "^0.69.3",
+        "typescript": "^4.7.4",
+        "@types/react-addons-shallow-compare": "^0.14.22"
     },
     "homepage": "https://github.com/meliorence/react-native-snap-carousel",
     "bugs": {

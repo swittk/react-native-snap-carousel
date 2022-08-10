@@ -1,38 +1,41 @@
 import React, { PureComponent } from 'react';
-import { I18nManager, Platform, View, ViewPropTypes } from 'react-native';
+import { I18nManager, Platform, View, StyleProp, ViewStyle } from 'react-native';
 import PropTypes from 'prop-types';
 import PaginationDot from './PaginationDot';
 import styles from './Pagination.style';
+import Carousel from '../carousel/Carousel';
 
 const IS_IOS = Platform.OS === 'ios';
 const IS_RTL = I18nManager.isRTL;
 
-export default class Pagination extends PureComponent {
+type PaginationAllProps = {
+    activeDotIndex: number,
+    dotsLength: number,
+    activeOpacity?: number,
+    carouselRef: React.RefObject<Carousel<any>>,
+    containerStyle: StyleProp<ViewStyle>,
+    dotColor: string,
+    dotContainerStyle: StyleProp<ViewStyle>,
+    dotElement: JSX.Element,
+    dotStyle: StyleProp<ViewStyle>,
+    inactiveDotColor: string,
+    inactiveDotElement: JSX.Element,
+    inactiveDotOpacity: number,
+    inactiveDotScale: number,
+    inactiveDotStyle: StyleProp<ViewStyle>,
+    renderDots: (activeDotIndex: number, dotsLength: number, pagination: Pagination) => JSX.Element,
+    tappableDots: boolean,
+    vertical: boolean,
+    accessibilityLabel: string,
+    animatedDuration: number,
+    animatedFriction: number,
+    animatedTension: number,
+    delayPressInDot: number
+}
 
-    static propTypes = {
-        activeDotIndex: PropTypes.number.isRequired,
-        dotsLength: PropTypes.number.isRequired,
-        activeOpacity: PropTypes.number,
-        carouselRef: PropTypes.object,
-        containerStyle: ViewPropTypes ? ViewPropTypes.style : View.propTypes.style,
-        dotColor: PropTypes.string,
-        dotContainerStyle: ViewPropTypes ? ViewPropTypes.style : View.propTypes.style,
-        dotElement: PropTypes.element,
-        dotStyle: ViewPropTypes ? ViewPropTypes.style : View.propTypes.style,
-        inactiveDotColor: PropTypes.string,
-        inactiveDotElement: PropTypes.element,
-        inactiveDotOpacity: PropTypes.number,
-        inactiveDotScale: PropTypes.number,
-        inactiveDotStyle: ViewPropTypes ? ViewPropTypes.style : View.propTypes.style,
-        renderDots: PropTypes.func,
-        tappableDots: PropTypes.bool,
-        vertical: PropTypes.bool,
-        accessibilityLabel: PropTypes.string,
-        animatedDuration: PropTypes.number,
-        animatedFriction: PropTypes.number,
-        animatedTension: PropTypes.number,
-        delayPressInDot: PropTypes.number,
-    };
+type PaginationProps = Omit<PaginationAllProps, keyof typeof Pagination['defaultProps']> & Partial<Pick<PaginationAllProps, keyof typeof Pagination['defaultProps']>>;
+
+export default class Pagination extends PureComponent<PaginationProps> {
 
     static defaultProps = {
         inactiveDotOpacity: 0.5,
@@ -43,9 +46,9 @@ export default class Pagination extends PureComponent {
         animatedFriction: 4,
         animatedTension: 50,
         delayPressInDot: 0,
-    }
+    } as const
 
-    constructor (props) {
+    constructor(props: PaginationAllProps) {
         super(props);
 
         // Warnings
@@ -69,19 +72,19 @@ export default class Pagination extends PureComponent {
         }
     }
 
-    _needsRTLAdaptations () {
+    _needsRTLAdaptations() {
         const { vertical } = this.props;
         return IS_RTL && !IS_IOS && !vertical;
     }
 
-    get _activeDotIndex () {
+    get _activeDotIndex() {
         const { activeDotIndex, dotsLength } = this.props;
         return this._needsRTLAdaptations() ? dotsLength - activeDotIndex - 1 : activeDotIndex;
     }
 
-    get dots () {
+    get dots() {
         const {
-            activeOpacity,
+            activeOpacity = 0,
             carouselRef,
             dotsLength,
             dotColor,
@@ -99,27 +102,27 @@ export default class Pagination extends PureComponent {
             animatedFriction,
             animatedTension,
             delayPressInDot,
-        } = this.props;
+        } = this.props as PaginationAllProps;
 
         if (renderDots) {
             return renderDots(this._activeDotIndex, dotsLength, this);
         }
 
         const DefaultDot = <PaginationDot
-          carouselRef={carouselRef}
-          tappable={tappableDots && typeof carouselRef !== 'undefined'}
-          activeOpacity={activeOpacity}
-          color={dotColor}
-          containerStyle={dotContainerStyle}
-          style={dotStyle}
-          inactiveColor={inactiveDotColor}
-          inactiveOpacity={inactiveDotOpacity}
-          inactiveScale={inactiveDotScale}
-          inactiveStyle={inactiveDotStyle}
-          animatedDuration={animatedDuration}
-          animatedFriction={animatedFriction}
-          animatedTension={animatedTension}
-          delayPressInDot={delayPressInDot}
+            carouselRef={carouselRef}
+            tappable={tappableDots && typeof carouselRef !== 'undefined'}
+            activeOpacity={activeOpacity}
+            color={dotColor}
+            containerStyle={dotContainerStyle}
+            style={dotStyle}
+            inactiveColor={inactiveDotColor}
+            inactiveOpacity={inactiveDotOpacity}
+            inactiveScale={inactiveDotScale}
+            inactiveStyle={inactiveDotStyle}
+            animatedDuration={animatedDuration}
+            animatedFriction={animatedFriction}
+            animatedTension={animatedTension}
+            delayPressInDot={delayPressInDot}
         />;
 
         const dots = [...Array(dotsLength).keys()].map(i => {
@@ -137,7 +140,7 @@ export default class Pagination extends PureComponent {
         return dots;
     }
 
-    render () {
+    render() {
         const { dotsLength, containerStyle, vertical, accessibilityLabel } = this.props;
 
         if (!dotsLength || dotsLength < 2) {
@@ -146,21 +149,22 @@ export default class Pagination extends PureComponent {
 
         const style = [
             styles.sliderPagination,
-            { flexDirection: vertical ?
-                'column' :
-                (this._needsRTLAdaptations() ? 'row-reverse' : 'row')
+            {
+                flexDirection: vertical ?
+                    'column' :
+                    (this._needsRTLAdaptations() ? 'row-reverse' : 'row')
             },
-            containerStyle || {}
-        ];
+            containerStyle
+        ] as StyleProp<ViewStyle>;
 
         return (
             <View
-              pointerEvents={'box-none'}
-              style={style}
-              accessible={!!accessibilityLabel}
-              accessibilityLabel={accessibilityLabel}
+                pointerEvents={'box-none'}
+                style={style}
+                accessible={!!accessibilityLabel}
+                accessibilityLabel={accessibilityLabel}
             >
-                { this.dots }
+                {this.dots}
             </View>
         );
     }

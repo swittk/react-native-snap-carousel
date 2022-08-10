@@ -1,35 +1,59 @@
 // Parallax effect inspired by https://github.com/oblador/react-native-parallax/
 
 import React, { Component } from 'react';
-import { View, ViewPropTypes, Image, Animated, Easing, ActivityIndicator, findNodeHandle } from 'react-native';
+import { View, ImageProps, Image, Animated, Easing, ActivityIndicator, findNodeHandle, StyleProp, ViewStyle, FlatList, ScrollView, ImageStyle, NativeSyntheticEvent, ImageLoadEventData, ImageErrorEventData } from 'react-native';
 import PropTypes from 'prop-types';
 import styles from './ParallaxImage.style';
+import type Carousel from '../carousel/Carousel';
 
-export default class ParallaxImage extends Component {
+type ParallaxImageAllProps = {
+    carouselRef: ScrollView | FlatList, // passed from <Carousel />
+    itemHeight: number, // passed from <Carousel />
+    itemWidth: number, // passed from <Carousel />
+    scrollPosition: Animated.Value, // passed from <Carousel />
+    sliderHeight: number, // passed from <Carousel />
+    sliderWidth: number, // passed from <Carousel />
+    vertical: boolean, // passed from <Carousel />
+    containerStyle: StyleProp<ViewStyle>,
+    /**
+     * On screen dimensions of the image
+     */
+    dimensions: { width: number, height: number },
+    /**
+     * Duration of fade in when object is loaded. Default of 500
+     */
+    fadeDuration: number,
+    /**
+     * Speed of parallax effect. A higher value appears more 'zoomed in'
+     */
+    parallaxFactor: number,
+    /**
+     * Whether to display a loading spinner
+     */
+    showSpinner: boolean,
+    /**
+     * Color of the loading spinner if displayed
+     */
+    spinnerColor: string,
+    AnimatedImageComponent: typeof Animated.Image | Animated.AnimatedComponent<typeof Image>
+} & ImageProps;
 
-    static propTypes = {
-        ...Image.propTypes,
-        carouselRef: PropTypes.object, // passed from <Carousel />
-        itemHeight: PropTypes.number, // passed from <Carousel />
-        itemWidth: PropTypes.number, // passed from <Carousel />
-        scrollPosition: PropTypes.object, // passed from <Carousel />
-        sliderHeight: PropTypes.number, // passed from <Carousel />
-        sliderWidth: PropTypes.number, // passed from <Carousel />
-        vertical: PropTypes.bool, // passed from <Carousel />
-        containerStyle: ViewPropTypes ? ViewPropTypes.style : View.propTypes.style,
-        dimensions: PropTypes.shape({
-            width: PropTypes.number,
-            height: PropTypes.number
-        }),
-        fadeDuration: PropTypes.number,
-        parallaxFactor: PropTypes.number,
-        showSpinner: PropTypes.bool,
-        spinnerColor: PropTypes.string,
-        AnimatedImageComponent: PropTypes.oneOfType([
-            PropTypes.func,
-            PropTypes.object
-        ])
-    };
+type ParallaxImageProps = Omit<ParallaxImageAllProps, keyof typeof ParallaxImage['defaultProps']> & Partial<Pick<ParallaxImageAllProps, keyof typeof ParallaxImage['defaultProps']>>;
+
+type ParallaxImageState = {
+    /**
+     *  1 -> loading; 2 -> loaded // 3 -> transition finished; 4 -> error
+     */
+    status: 1 | 2 | 3 | 4,
+    animOpacity: Animated.Value,
+    offset: number,
+    width: number,
+    height: number
+}
+
+export default class ParallaxImage extends Component<ParallaxImageProps, ParallaxImageState> {
+    _container: View | null = null;
+    _mounted = false;
 
     static defaultProps = {
         containerStyle: {},
@@ -40,7 +64,7 @@ export default class ParallaxImage extends Component {
         AnimatedImageComponent: Animated.Image
     }
 
-    constructor (props) {
+    constructor(props: ParallaxImageProps) {
         super(props);
         this.state = {
             offset: 0,
@@ -54,11 +78,11 @@ export default class ParallaxImage extends Component {
         this._measureLayout = this._measureLayout.bind(this);
     }
 
-    setNativeProps (nativeProps) {
-        this._container.setNativeProps(nativeProps);
+    setNativeProps(nativeProps: object) {
+        this._container!.setNativeProps(nativeProps);
     }
 
-    componentDidMount () {
+    componentDidMount() {
         this._mounted = true;
 
         setTimeout(() => {
@@ -66,11 +90,11 @@ export default class ParallaxImage extends Component {
         }, 0);
     }
 
-    componentWillUnmount () {
+    componentWillUnmount() {
         this._mounted = false;
     }
 
-    _measureLayout () {
+    _measureLayout() {
         if (this._container) {
             const {
                 dimensions,
@@ -84,8 +108,8 @@ export default class ParallaxImage extends Component {
 
             if (carouselRef) {
                 this._container.measureLayout(
-                    findNodeHandle(carouselRef),
-                    (x, y, width, height, pageX, pageY) => {
+                    findNodeHandle(carouselRef)!,
+                    (x, y, width, height) => {
                         const offset = vertical ?
                             y - ((sliderHeight - itemHeight) / 2) :
                             x - ((sliderWidth - itemWidth) / 2);
@@ -99,13 +123,16 @@ export default class ParallaxImage extends Component {
                                 dimensions.height :
                                 Math.ceil(height)
                         });
+                    },
+                    () => {
+                        // lol do nothing when fail
                     }
                 );
             }
         }
     }
 
-    _onLoad (event) {
+    _onLoad(event: NativeSyntheticEvent<ImageLoadEventData>) {
         const { animOpacity } = this.state;
         const { fadeDuration, onLoad } = this.props;
 
@@ -131,7 +158,7 @@ export default class ParallaxImage extends Component {
     }
 
     // If arg is missing from method signature, it just won't be called
-    _onError (event) {
+    _onError(event: NativeSyntheticEvent<ImageErrorEventData>) {
         const { onError } = this.props;
 
         this.setState({ status: 4 });
@@ -141,7 +168,7 @@ export default class ParallaxImage extends Component {
         }
     }
 
-    get image () {
+    get image() {
         const { status, animOpacity, offset, width, height } = this.state;
         const {
             scrollPosition,
@@ -153,10 +180,10 @@ export default class ParallaxImage extends Component {
             style,
             AnimatedImageComponent,
             ...other
-        } = this.props;
+        } = this.props as ParallaxImageAllProps;
 
         const parallaxPadding = (vertical ? height : width) * parallaxFactor;
-        const requiredStyles = { position: 'relative' };
+        const requiredStyles = { position: 'relative' } as ImageStyle;
         const dynamicStyles = {
             width: vertical ? width : width + parallaxPadding * 2,
             height: vertical ? height + parallaxPadding * 2 : height,
@@ -181,41 +208,41 @@ export default class ParallaxImage extends Component {
 
         return (
             <AnimatedImageComponent
-              {...other}
-              style={[styles.image, style, requiredStyles, dynamicStyles]}
-              onLoad={this._onLoad}
-              onError={status !== 3 ? this._onError : undefined} // prevent infinite-loop bug
+                {...other}
+                style={[styles.image, style, requiredStyles, dynamicStyles]}
+                onLoad={this._onLoad}
+                onError={status !== 3 ? this._onError : undefined} // prevent infinite-loop bug
             />
         );
     }
 
-    get spinner () {
+    get spinner() {
         const { status } = this.state;
         const { showSpinner, spinnerColor } = this.props;
 
         return status === 1 && showSpinner ? (
             <View style={styles.loaderContainer}>
                 <ActivityIndicator
-                  size={'small'}
-                  color={spinnerColor}
-                  animating={true}
+                    size={'small'}
+                    color={spinnerColor}
+                    animating={true}
                 />
             </View>
         ) : false;
     }
 
-    render () {
+    render() {
         const { containerStyle } = this.props;
 
         return (
             <View
-              ref={(c) => { this._container = c; }}
-              pointerEvents={'none'}
-              style={[containerStyle, styles.container]}
-              onLayout={this._measureLayout}
+                ref={(c) => { this._container = c; }}
+                pointerEvents={'none'}
+                style={[containerStyle, styles.container]}
+                onLayout={this._measureLayout}
             >
-                { this.image }
-                { this.spinner }
+                {this.image}
+                {this.spinner}
             </View>
         );
     }
