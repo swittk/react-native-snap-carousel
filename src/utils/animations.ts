@@ -15,6 +15,7 @@ const IS_ANDROID = Platform.OS === 'android';
 // ]
 export function getInputRangeFromIndexes(range: number[], index: number, carouselProps: CarouselProps<any>) {
     const sizeRef = carouselProps.vertical ? carouselProps.itemHeight : carouselProps.itemWidth;
+    if (sizeRef == undefined) throw new TypeError('itemHeight or itemWidth should be specified');
     let inputRange: number[] = [];
 
     for (let i = 0; i < range.length; i++) {
@@ -124,6 +125,7 @@ export function stackScrollInterpolator(index: number, carouselProps: CarouselPr
 }
 export function stackAnimatedStyles(index: number, animatedValue: Animated.Value, carouselProps: CarouselProps<any>, cardOffset: number) {
     const sizeRef = carouselProps.vertical ? carouselProps.itemHeight : carouselProps.itemWidth;
+    if (sizeRef == undefined) throw new TypeError('itemHeight or itemWidth should be specified');
     const translateProp = carouselProps.vertical ? 'translateY' : 'translateX';
 
     const card1Scale = 0.9;
@@ -215,6 +217,7 @@ export function tinderScrollInterpolator(index: number, carouselProps: CarouselP
 }
 export function tinderAnimatedStyles(index: number, animatedValue: Animated.Value, carouselProps: CarouselProps<any>, cardOffset: number) {
     const sizeRef = carouselProps.vertical ? carouselProps.itemHeight : carouselProps.itemWidth;
+    if (sizeRef == undefined) throw new TypeError('itemHeight or itemWidth should be specified');
     const mainTranslateProp = carouselProps.vertical ? 'translateY' : 'translateX';
     const secondaryTranslateProp = carouselProps.vertical ? 'translateX' : 'translateY';
 

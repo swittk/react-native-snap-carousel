@@ -24,7 +24,6 @@ const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 // NOTE: the following variable is not declared in the constructor
 // otherwise it is undefined at init, which messes with custom indexes
 const IS_RTL = I18nManager.isRTL;
-
 export type CarouselAllProps<T> = {
     /**
      * Array of items to loop over
@@ -47,22 +46,22 @@ export type CarouselAllProps<T> = {
      * Width in pixels of your slides, must be the same for all of them
      * Note: Required with horizontal carousel
      */
-    itemWidth: number,
+    itemWidth?: number,
     /**
      * Height in pixels of carousel's items, must be the same for all of them
      * Note: Required with vertical carousel
      */
-    itemHeight: number,
+    itemHeight?: number,
     /**
      * Width in pixels of your slider
      * Note: Required with horizontal carousel
      */
-    sliderWidth: number,
+    sliderWidth?: number,
     /**
      * Height in pixels of the carousel itself
      * Note: Required with vertical carousel
      */
-    sliderHeight: number,
+    sliderHeight?: number,
 
     // Behavior
 
@@ -205,15 +204,15 @@ export type CarouselAllProps<T> = {
     /**
      * Use to increase or decrease the default card offset in both 'stack' and 'tinder' layouts.
      */
-    layoutCardOffset: number,
+    layoutCardOffset?: number,
     /**
      * Used to define custom interpolations
      */
-    scrollInterpolator: (index: number, props: Readonly<CarouselProps<T>>) => { inputRange: number[], outputRange: number[] },
+    scrollInterpolator?: (index: number, props: Readonly<CarouselProps<T>>) => { inputRange: number[], outputRange: number[] },
     /**
      * Used to define custom interpolations
      */
-    slideInterpolatedStyle: (index: number, animatedValue: Animated.AnimatedValue, carouselProps: CarouselProps<any>, cardOffset?: number) => StyleProp<ViewStyle>,
+    slideInterpolatedStyle?: (index: number, animatedValue: Animated.AnimatedValue, carouselProps: CarouselProps<any>, cardOffset?: number) => StyleProp<ViewStyle>,
     /**
      * Optional style for each item's container (the one whose scale and opacity are animated)
      */
@@ -745,23 +744,46 @@ export default class Carousel<T> extends Component<CarouselProps<T>, CarouselSta
             return 0;
         } else if ((activeSlideAlignment === 'end' && !opposite) ||
             (activeSlideAlignment === 'start' && opposite)) {
-            return vertical ? sliderHeight - itemHeight : sliderWidth - itemWidth;
+            if (vertical) {
+                // if ((sliderHeight == undefined) || (itemHeight == undefined)) {
+                //     throw new TypeError('sliderHeight and itemHeight must be specified for vertical carousel');
+                // }
+                return sliderHeight! - itemHeight!;
+            }
+            else {
+                // if ((sliderWidth == undefined) || (itemWidth == undefined)) {
+                //     throw new TypeError('sliderWidth and itemWidth must be specified for horizontal carousel');
+                // }
+                return sliderWidth! - itemWidth!;
+            }
         } else {
-            return vertical ? (sliderHeight - itemHeight) / 2 : (sliderWidth - itemWidth) / 2;
+            if (vertical) {
+                // if ((sliderHeight == undefined) || (itemHeight == undefined)) {
+                //     throw new TypeError('sliderHeight and itemHeight must be specified for vertical carousel');
+                // }
+                return (sliderHeight! - itemHeight!) / 2;
+            }
+            else {
+                // if ((sliderWidth == undefined) || (itemWidth == undefined)) {
+                //     throw new TypeError('sliderWidth and itemWidth must be specified for horizontal carousel');
+                // }
+                return (sliderWidth! - itemWidth!) / 2;
+            }
         }
+        // sorry but I think these safety checks might be making us slowwww
     }
 
     _getViewportOffset() {
         const { sliderWidth, sliderHeight, itemWidth, itemHeight, vertical, activeSlideAlignment } = this.props as CarouselAllProps<T>;
 
         if (activeSlideAlignment === 'start') {
-            return vertical ? itemHeight / 2 : itemWidth / 2;
+            return vertical ? itemHeight! / 2 : itemWidth! / 2;
         } else if (activeSlideAlignment === 'end') {
             return vertical ?
-                sliderHeight - (itemHeight / 2) :
-                sliderWidth - (itemWidth / 2);
+                sliderHeight! - (itemHeight! / 2) :
+                sliderWidth! - (itemWidth! / 2);
         } else {
-            return vertical ? sliderHeight / 2 : sliderWidth / 2;
+            return vertical ? sliderHeight! / 2 : sliderWidth! / 2;
         }
     }
 
@@ -792,6 +814,7 @@ export default class Carousel<T> extends Component<CarouselProps<T>, CarouselSta
     _initPositionsAndInterpolators(props = this.props as CarouselAllProps<T>) {
         const { data, itemWidth, itemHeight, scrollInterpolator, vertical } = props;
         const sizeRef = vertical ? itemHeight : itemWidth;
+        if (sizeRef == undefined) throw new TypeError(vertical ? 'itemHeight should be set' : 'itemWidth should be set');
 
         if (!data || !data.length) {
             return;
@@ -1416,9 +1439,9 @@ export default class Carousel<T> extends Component<CarouselProps<T>, CarouselSta
         if (slideInterpolatedStyle) {
             return slideInterpolatedStyle(index, animatedValue, this.props);
         } else if (this._shouldUseTinderLayout()) {
-            return tinderAnimatedStyles(index, animatedValue, this.props, layoutCardOffset);
+            return tinderAnimatedStyles(index, animatedValue, this.props, layoutCardOffset!);
         } else if (this._shouldUseStackLayout()) {
-            return stackAnimatedStyles(index, animatedValue, this.props, layoutCardOffset);
+            return stackAnimatedStyles(index, animatedValue, this.props, layoutCardOffset!);
         } else if (this._shouldUseShiftLayout()) {
             return shiftAnimatedStyles(index, animatedValue, this.props);
         } else {
@@ -1485,8 +1508,8 @@ export default class Carousel<T> extends Component<CarouselProps<T>, CarouselSta
         } = this.props as CarouselAllProps<T>;
 
         const visibleItems = Math.ceil(vertical ?
-            sliderHeight / itemHeight :
-            sliderWidth / itemWidth) + 1;
+            sliderHeight! / itemHeight! :
+            sliderWidth! / itemWidth!) + 1;
         const initialNumPerSide = this._enableLoop() ? loopClonesPerSide : 2;
         const initialNumToRender = visibleItems + (initialNumPerSide * 2);
         const maxToRenderPerBatch = 1 + (initialNumToRender * 2);
