@@ -1,6 +1,6 @@
 {
     "name": "@switt/react-native-snap-carousel",
-    "version": "3.9.1-alpha2",
+    "version": "3.9.1-alpha4",
     "description": "Swiper/carousel component for React Native with previews, multiple layouts, parallax images, performant handling of huge numbers of items, and RTL support. Compatible with Android & iOS.",
     "main": "lib/index",
     "repository": {
@@ -8,7 +8,7 @@
         "url": "github.com/meliorence/react-native-snap-carousel"
     },
     "scripts": {
-        "prepublish": "tsc"
+        "prepublish": "npx tsc"
     },
     "keywords": [
         "react",
