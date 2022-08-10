@@ -1,4 +1,7 @@
-# react-native-snap-carousel
+# @switt/react-native-snap-carousel
+
+⚠️A fork of @meliorence 's `react-native-snap-carousel` which is wholly rewritten to use Typescript (so it's easier to maintain).
+Feel free to contribute.
 
 ![platforms](https://img.shields.io/badge/platforms-Android%20%7C%20iOS-brightgreen.svg?style=flat-square&colorB=191A17)
 [![npm](https://img.shields.io/npm/v/react-native-snap-carousel.svg?style=flat-square)](https://www.npmjs.com/package/react-native-snap-carousel)
